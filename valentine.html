@@ -20,6 +20,7 @@ body {
   overflow: hidden;
   position: relative;
 }
+
 @keyframes gradientBG {
   0% {background-position: 0% 50%;}
   50% {background-position: 100% 50%;}
@@ -37,17 +38,21 @@ body {
   position: relative;
   z-index: 2;
 }
+
 h1 {
   color: #ff007f;
   font-size: 24px;
   margin-bottom: 15px;
 }
+
 p {
   font-size: 16px;
   opacity: 0.95;
   margin-bottom: 20px;
   min-height: 60px;
   word-wrap: break-word;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .buttons {
@@ -57,6 +62,7 @@ p {
   position: relative;
   flex-wrap: wrap;
 }
+
 .btn {
   padding: 10px 22px;
   border-radius: 50px;
@@ -66,19 +72,22 @@ p {
   transition: all 0.3s;
   position: relative;
 }
+
 .btn-yes {
   background-color: #ff007f;
   color: #fff;
   animation: pulse 1.5s infinite;
 }
+
 .btn-yes:hover { transform: scale(1.1); }
+
 .btn-no {
   background-color: #fff;
   color: #ff007f;
 }
-.btn-no:hover {
-  transform: rotate(20deg);
-  background-color: #ffe6f0;
+
+.btn-no:active {
+  transform: scale(1.1);
 }
 
 @keyframes pulse {
@@ -95,31 +104,44 @@ p {
   z-index: 2;
 }
 
-.heart, .sparkle {
+.heart, .sparkle, .confetti {
   position: absolute;
   z-index: 1;
   pointer-events: none;
 }
+
 .heart {
   color: #ff007f;
   font-size: 18px;
   animation: fall 5s linear infinite;
 }
+
 .sparkle {
   color: #fff;
   font-size: 10px;
   animation: float 4s linear infinite;
 }
+
+.confetti {
+  font-size: 18px;
+  animation: confetti-fall 3s forwards;
+}
+
 @keyframes fall {
   0% {transform: translateY(-50px) rotate(0deg);}
   100% {transform: translateY(100vh) rotate(360deg);}
 }
+
 @keyframes float {
   0% {transform: translateY(0) rotate(0deg);}
   100% {transform: translateY(-200px) rotate(360deg);}
 }
 
-/* Mobile adjustments */
+@keyframes confetti-fall {
+  0% {opacity: 1; transform: translateY(0) rotate(0deg);}
+  100% {opacity: 0; transform: translateY(300px) rotate(720deg);}
+}
+
 @media (max-width: 400px){
   h1 { font-size: 22px; }
   p { font-size: 15px; }
@@ -132,9 +154,6 @@ p {
 <div class="card" id="card"></div>
 <div class="footer">© 2025. Made with ❤️ for Janvi</div>
 
-<!-- Optional Background Music -->
-<audio id="bgMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" autoplay loop></audio>
-
 <script>
 const slides = [
   { title: "For Janvi 💖", text: "I have something special to ask you...\nWill you be mine? 🌹" },
@@ -146,71 +165,86 @@ const slides = [
 let currentSlide = 0;
 const card = document.getElementById("card");
 
-function typeWriter(text, i = 0) {
-  return new Promise(resolve => {
+function typeWriter(text,i=0){
+  return new Promise(resolve=>{
     const p = card.querySelector("p");
-    p.innerHTML = text.slice(0, i) + (i < text.length ? "|" : "");
-    if (i < text.length) setTimeout(() => typeWriter(text, i+1).then(resolve), 25);
+    p.innerHTML = text.slice(0,i) + (i<text.length ? "|" : "");
+    if(i<text.length) setTimeout(()=>typeWriter(text,i+1).then(resolve),25);
     else resolve();
   });
 }
 
-function renderSlide() {
-  if(currentSlide >= slides.length) currentSlide = slides.length - 1;
+function renderSlide(){
+  if(currentSlide>=slides.length) currentSlide=slides.length-1;
   const slide = slides[currentSlide];
   card.innerHTML = `<h1>${slide.title}</h1><p></p><div class="buttons">
-    ${currentSlide < slides.length - 1 ? `<button class="btn btn-yes" onclick="nextSlide()">YES ✨</button>
-    <button class="btn btn-no" id="noBtn">NO 🙈</button>` : ''}</div>`;
-  
-  typeWriter(slide.text.replace(/\n/g, "<br>"));
+    ${currentSlide<slides.length-1?`<button class="btn btn-yes" id="yesBtn">YES ✨</button>
+    <button class="btn btn-no" id="noBtn">NO 🙈</button>`:''}</div>`;
 
-  if(currentSlide < slides.length - 1){
-    const noBtn = document.getElementById("noBtn");
-    noBtn.addEventListener("mouseenter", () => {
-      const x = Math.floor(Math.random() * 120) - 60;
-      const y = Math.floor(Math.random() * 40) - 20;
-      noBtn.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*30}deg)`;
+  typeWriter(slide.text.replace(/\n/g,"<br>"));
+
+  if(currentSlide<slides.length-1){
+    const noBtn=document.getElementById("noBtn");
+    const yesBtn=document.getElementById("yesBtn");
+
+    // Super playful NO button (move + wiggle)
+    noBtn.addEventListener("click",()=>{
+      const x=Math.floor(Math.random()*120)-60;
+      const y=Math.floor(Math.random()*40)-20;
+      const rotate=Math.random()*40-20;
+      noBtn.style.transform=`translate(${x}px,${y}px) rotate(${rotate}deg)`;
+      noBtn.style.transition="transform 0.3s ease";
+
+      setTimeout(()=>{
+        const wiggle=Math.random()*20-10;
+        noBtn.style.transform=`translate(${x}px,${y}px) rotate(${rotate+wiggle}deg)`;
+      },150);
     });
-    noBtn.addEventListener("click", nextSlide);
+
+    // YES button triggers confetti
+    yesBtn.addEventListener("click",()=>{
+      for(let i=0;i<30;i++){
+        const conf=document.createElement("div");
+        conf.className="confetti";
+        conf.innerText="🎉";
+        conf.style.left=Math.random()*window.innerWidth+"px";
+        conf.style.fontSize=(12+Math.random()*12)+"px";
+        document.body.appendChild(conf);
+        setTimeout(()=>conf.remove(),3000);
+      }
+      nextSlide();
+    });
   }
 
-  if(currentSlide === slides.length - 1){
-    startHeartsAndSparkles();
-  }
+  if(currentSlide===slides.length-1) startHeartsAndSparkles();
 }
 
-function nextSlide() {
-  currentSlide++;
-  renderSlide();
-}
+function nextSlide(){currentSlide++; renderSlide();}
 
-function startHeartsAndSparkles() {
-  // Floating Hearts
+function startHeartsAndSparkles(){
   for(let i=0;i<25;i++){
-    const heart = document.createElement("div");
-    heart.className = "heart";
-    heart.innerText = "💖";
-    heart.style.left = Math.random()*window.innerWidth+"px";
-    heart.style.fontSize = (15+Math.random()*25)+"px";
-    heart.style.animationDuration = (3+Math.random()*3)+"s";
+    const heart=document.createElement("div");
+    heart.className="heart";
+    heart.innerText="💖";
+    heart.style.left=Math.random()*window.innerWidth+"px";
+    heart.style.fontSize=(15+Math.random()*25)+"px";
+    heart.style.animationDuration=(3+Math.random()*3)+"s";
     document.body.appendChild(heart);
     setTimeout(()=>heart.remove(),6000);
   }
-  // Floating Sparkles
   for(let i=0;i<20;i++){
-    const spark = document.createElement("div");
-    spark.className = "sparkle";
-    spark.innerText = "✨";
-    spark.style.left = Math.random()*window.innerWidth+"px";
-    spark.style.top = Math.random()*window.innerHeight+"px";
-    spark.style.fontSize = (10+Math.random()*15)+"px";
-    spark.style.animationDuration = (2+Math.random()*3)+"s";
+    const spark=document.createElement("div");
+    spark.className="sparkle";
+    spark.innerText="✨";
+    spark.style.left=Math.random()*window.innerWidth+"px";
+    spark.style.top=Math.random()*window.innerHeight+"px";
+    spark.style.fontSize=(10+Math.random()*15)+"px";
+    spark.style.animationDuration=(2+Math.random()*3)+"s";
     document.body.appendChild(spark);
     setTimeout(()=>spark.remove(),6000);
   }
 }
 
-// Initial render
 renderSlide();
 </script>
 </body>
